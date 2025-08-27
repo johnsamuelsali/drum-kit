@@ -9,7 +9,6 @@ const soundFiles = {
 };
 
 let useWebAudio = true;
-
 if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
   useWebAudio = false;
 }
@@ -31,7 +30,7 @@ async function loadSounds() {
       const audio = new Audio(soundFiles[key]);
       audio.preload = "auto";
       audioElements[key] = audio;
-       await new Promise((resolve) => {
+      await new Promise(resolve => {
         audio.addEventListener("canplaythrough", resolve, { once: true });
         audio.load();
       });
@@ -41,6 +40,7 @@ async function loadSounds() {
 
 function playSound(key) {
   if (useWebAudio) {
+    if (audioCtx.state === "suspended") audioCtx.resume();
     const buffer = soundBuffers[key];
     if (buffer) {
       const source = audioCtx.createBufferSource();
@@ -65,16 +65,19 @@ function animate(key) {
   }
 }
 
-const drums = document.querySelectorAll(".drum");
-for (let i = 0; i < drums.length; i++) {
-  drums[i].addEventListener("click", function () {
-    const key = this.innerHTML.trim().toLowerCase();
-    playSound(key);
-    animate(key);
-  });
+function handlePress(e) {
+  e.preventDefault();
+  const key = this.innerHTML.trim().toLowerCase();
+  playSound(key);
+  animate(key);
 }
 
-document.addEventListener("keydown", function (event) {
+document.querySelectorAll(".drum").forEach(drum => {
+  drum.addEventListener("click", handlePress);
+  drum.addEventListener("touchstart", handlePress);
+});
+
+document.addEventListener("keydown", function(event) {
   const key = event.key.toLowerCase();
   playSound(key);
   animate(key);
