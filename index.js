@@ -48,7 +48,7 @@ function playSound(key) {
     const audio = audioElements[key];
     if (audio) {
       const clone = audio.cloneNode();
-      clone.play();
+      clone.play().catch(() => {});
     }
   }
 }
