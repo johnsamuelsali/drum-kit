@@ -31,6 +31,10 @@ async function loadSounds() {
       const audio = new Audio(soundFiles[key]);
       audio.preload = "auto";
       audioElements[key] = audio;
+       await new Promise((resolve) => {
+        audio.addEventListener("canplaythrough", resolve, { once: true });
+        audio.load();
+      });
     }
   }
 }
