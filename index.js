@@ -1,46 +1,55 @@
-var drums = document.querySelectorAll(".drum");
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-var sounds = {
-  a: new Audio("./sounds/tom-1.mp3"),
-  s: new Audio("./sounds/tom-2.mp3"),
-  d: new Audio("./sounds/tom-3.mp3"),
-  f: new Audio("./sounds/tom-4.mp3"),
-  j: new Audio("./sounds/snare.mp3"),
-  k: new Audio("./sounds/crash.mp3"),
-  l: new Audio("./sounds/kick-bass.mp3")
+const soundFiles = {
+  a: "sounds/tom-1.mp3",
+  s: "sounds/tom-2.mp3",
+  d: "sounds/tom-3.mp3",
+  f: "sounds/tom-4.mp3",
+  j: "sounds/snare.mp3",
+  k: "sounds/crash.mp3",
+  l: "sounds/kick-bass.mp3"
 };
 
-for (let key in sounds) {
-  sounds[key].load();
+const soundBuffers = {};
+
+async function loadSounds() {
+  for (let key in soundFiles) {
+    const response = await fetch(soundFiles[key]);
+    const arrayBuffer = await response.arrayBuffer();
+    soundBuffers[key] = await audioCtx.decodeAudioData(arrayBuffer);
+  }
 }
-
-for (var i = 0; i < drums.length; i++) {
-  drums[i].addEventListener("click", function() {
-    playSound(this.innerHTML);
-     animate(this.innerHTML);
-  });
-}
-
-
-document.addEventListener("keydown", function (KeyboardEvent) {
-    playSound(KeyboardEvent.key);
-     animate(KeyboardEvent.key);
-});
-
 
 function playSound(key) {
-  if (sounds[key]) {
-    sounds[key].currentTime = 0;
-    sounds[key].play();
+  const buffer = soundBuffers[key];
+  if (buffer) {
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
   }
 }
 
 function animate(key) {
-    var activeButton = document.querySelector("." +key);
-     if (activeButton) {
+  const activeButton = document.querySelector("." + key);
+  if (activeButton) {
     activeButton.classList.add("pressed");
-    setTimeout(function() {
-        activeButton.classList.remove("pressed");
-    }, 100);
+    setTimeout(() => activeButton.classList.remove("pressed"), 100);
+  }
 }
+
+const drums = document.querySelectorAll(".drum");
+for (let i = 0; i < drums.length; i++) {
+  drums[i].addEventListener("click", function () {
+    const key = this.innerHTML.trim();
+    playSound(key);
+    animate(key);
+  });
 }
+
+document.addEventListener("keydown", function (event) {
+  playSound(event.key);
+  animate(event.key);
+});
+
+loadSounds();
